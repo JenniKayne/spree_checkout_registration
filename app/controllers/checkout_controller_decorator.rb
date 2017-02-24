@@ -28,37 +28,45 @@ Spree::CheckoutController.class_eval do
   end
 
   def save_user_to_create
-    return if @order.state != 'address' || !current_spree_user.blank? || params[:create_account] != '1'
+    return if @order.state != 'address' || !current_spree_user.blank?
 
-    user = Spree::User.new(
-      email: @order.email,
-      password: params[:password],
-      password_confirmation: params[:password_confirmation]
-    )
-
-    if user.valid?
-      set_order_create_user
-    else
+    if params[:create_account] != '1'
       clear_order_create_user
-      flash[:error] = user.errors.full_messages.join(', ') unless user.errors.blank?
-      redirect_to :back
+    else
+      user = Spree::User.new(
+        email: @order.email,
+        password: params[:password],
+        password_confirmation: params[:password_confirmation]
+      )
+
+      if user.valid?
+        set_order_create_user(params[:password])
+      else
+        clear_order_create_user
+        flash[:error] = user.errors.full_messages.join(', ') unless user.errors.blank?
+        redirect_to :back
+      end
     end
   end
 
   def verify_updated_user_to_create
     return if params[:order].blank? || params[:order][:email].blank? || params[:order][:email] == @order.email
-    user = Spree::User.new(
-      email: params[:order][:email],
-      password: params[:password],
-      password_confirmation: params[:password_confirmation]
-    )
 
-    if user.valid?
-      set_order_create_user
-    else
-      clear_order_create_user
-      flash[:error] = user.errors.full_messages.join(', ') unless user.errors.blank?
-      redirect_to :back
+    load_order_create_user
+    if !@order_create_user.blank?
+      user = Spree::User.new(
+        email: params[:order][:email],
+        password: @order_create_user['password'],
+        password_confirmation: @order_create_user['password']
+      )
+
+      if user.valid?
+        set_order_create_user(@order_create_user['password'])
+      else
+        clear_order_create_user
+        flash[:error] = user.errors.full_messages.join(', ') unless user.errors.blank?
+        redirect_to :back
+      end
     end
   end
 
@@ -70,10 +78,10 @@ Spree::CheckoutController.class_eval do
                                                         session[:order_create_user]['order_number'] == @order.number
   end
 
-  def set_order_create_user
+  def set_order_create_user(password)
     session[:order_create_user] = {
-      order_number: @order.number,
-      password: params[:password]
+      'order_number' => @order.number,
+      'password' => password
     }
   end
 
