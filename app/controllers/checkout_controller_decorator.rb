@@ -19,6 +19,11 @@ Spree::CheckoutController.class_eval do
       if user.save
         flash[:success] = Spree.t('checkout_registration.user_created')
         @order.update(user: user)
+
+        user.update(
+          ship_address_id: @order.ship_address_id,
+          bill_address_id: @order.bill_address_id
+        )
       else
         Spree.t('checkout_registration.user_not_created')
         flash[:error] = Spree.t('checkout_registration.user_not_created')
