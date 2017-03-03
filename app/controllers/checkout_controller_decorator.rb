@@ -24,6 +24,8 @@ Spree::CheckoutController.class_eval do
           ship_address_id: @order.ship_address_id,
           bill_address_id: @order.bill_address_id
         )
+
+        sign_in(user, scope: :user)
       else
         Spree.t('checkout_registration.user_not_created')
         flash[:error] = Spree.t('checkout_registration.user_not_created')
