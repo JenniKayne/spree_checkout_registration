@@ -20,6 +20,13 @@ Spree::CheckoutController.class_eval do
         flash[:success] = Spree.t('checkout_registration.user_created')
         @order.update(user: user)
 
+        if @order.shipping_eq_billing_address?
+          @order.ship_address.update_attribute(:user_id, user.id)
+        else
+          @order.ship_address.update_attribute(:user_id, user.id)
+          @order.bill_address.update_attribute(:user_id, user.id)
+        end
+
         user.update(
           ship_address_id: @order.ship_address_id,
           bill_address_id: @order.bill_address_id
