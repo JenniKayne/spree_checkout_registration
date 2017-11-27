@@ -3,7 +3,7 @@ Spree::CheckoutController.class_eval do
   before_action :verify_updated_user_to_create, only: [:update]
   before_action :load_order_create_user, only: [:edit]
 
-  after_filter :create_user, only: [:update]
+  after_action :create_user, only: [:update]
 
   def create_user
     return if !@order.completed?
