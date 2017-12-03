@@ -42,13 +42,13 @@ Spree::CheckoutController.class_eval do
   end
 
   def save_user_to_create
-    return if @order.state != 'address' || !current_spree_user.blank?
+    return if @order.state != 'address' || current_spree_user.present?
 
     if params[:create_account] != '1'
       clear_order_create_user
     else
       user = Spree::User.new(
-        email: @order.email,
+        email: @order.email || params[:order][:email],
         password: params[:password],
         password_confirmation: params[:password_confirmation]
       )
@@ -58,7 +58,7 @@ Spree::CheckoutController.class_eval do
       else
         clear_order_create_user
         flash[:error] = user.errors.full_messages.join(', ') unless user.errors.blank?
-        redirect_to :back
+        redirect_to checkout_state_path(@order.state)
       end
     end
   end
